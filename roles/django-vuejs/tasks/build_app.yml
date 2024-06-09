@@ -1,26 +1,26 @@
 ---
-- name: Vérifier si le dépôt existe déjà
+- name: Check if cloned project already exists
   stat:
-    path: '{{ projet_dir }}/cookiecutter-django-vue-graphql-aws'
+    path: '{{ projet_dir }}/{{ cookiecutter_original }}'
   register: repo_exists
 
-- name: Vérifier si le venv '{{ venv_name }}' existe déjà
+- name: Check if venv '{{ venv_name }}' already exists
   stat:
     path: '{{ projet_dir }}/{{  venv_name }}'
   register: venv_exists
 
-- name: Vérifier si le projet django '{{ project_name }}' existe déjà
+- name: Check if project '{{ project_name }}' already exists
   stat:
     path: "{{ projet_dir }}/{{ project_slug }}"
   register: project_exists
 
-- name: Cloner le dépôt cookiecutter-django-vue-graphql-aws
+- name: Clone repo {{ git_project }}
   git:
-    repo: 'https://github.com/grantmcconnaughey/cookiecutter-django-vue-graphql-aws.git'
-    dest: '{{ projet_dir }}/cookiecutter-django-vue-graphql-aws'
+    repo: '{{ git_project }}'
+    dest: '{{ projet_dir }}/{{ cookiecutter_original }}'
   when: not repo_exists.stat.exists
 
-- name: Modifier le fichier cookiecutter.json
+- name: Edit file cookiecutter.json
   copy:
     content: |
       {
@@ -29,40 +29,46 @@
         "author_name": "{{ author_name }}",
         "domain_name": "{{ domain_name }}",
         "email": "{{ email }}",
-        "version": "{{ version }}"
+        "version": "{{ version }}",
+        "postgres_version": "{{ postgres_version }}",
+        "python_version": "{{ python_version }}",
+        "node_version": "{{ node_version }}"
       }
-    dest: "{{ projet_dir }}/cookiecutter-django-vue-graphql-aws/cookiecutter.json"
+    dest: "{{ projet_dir }}/{{ cookiecutter_original }}/cookiecutter.json"
 
-- name: Créer un environnement virtuel
+- name: Create venv {{ venv_name }}
   command: python3 -m venv {{ projet_dir }}/{{ venv_name }}
   when: not venv_exists.stat.exists
 
-- name: Activer l'environnement virtuel et installer Cookiecutter
+- name: source env & install cookiecutter
   shell: |
     source {{ projet_dir }}/{{ venv_name }}/bin/activate
     pip install cookiecutter
   args:
     executable: /bin/bash
 
-- name: Exécuter cookiecutter pour générer le projet
+- name: Generate the project
   shell: |
     source {{ projet_dir }}/{{ venv_name }}/bin/activate
-    cookiecutter --no-input {{ projet_dir }}/cookiecutter-django-vue-graphql-aws
+    cookiecutter --no-input {{ projet_dir }}/{{ cookiecutter_original }}
   environment:
     project_name: "{{ project_name }}"
     author_name: "{{ author_name }}"
     domain_name: "{{ domain_name }}"
     email: "{{ email }}"
     version: "{{ version }}"
+    postgres_version": "{{ postgres_version }}"
+    python_version": "{{ python_version }}"
+    node_version": "{{ node_version }}"
   args:
     chdir: '{{ projet_dir }}'
     executable: /bin/bash
   when: not project_exists.stat.exists
 
-- name: Supprimer le repo git matrice
-  command: rm -fr {{ projet_dir }}/cookiecutter-django-vue-graphql-aws
+- name: Remove cloned project
+  command: rm -fr {{ projet_dir }}/{{ cookiecutter_original }}
 
-- name: Supprimer le repo git matrice 2
+- name: Remove artifacts
   command: rm -fr {{ home_dir }}/{{ project_slug }}
 
 - name: owner {{ user }}
@@ -71,8 +77,7 @@
 - name: chmod 744
   command: 'chmod -R 744 {{ projet_dir }}'
 
-
-- name: Construire et démarrer les conteneurs Docker
+- name: Start containers detached
   shell: |
     source {{ projet_dir }}/{{ venv_name }}/bin/activate
     docker compose up --build -d

@@ -1,12 +1,12 @@
 ---
-- name: Vérifier et configurer les paquets interrompus
+- name: Check stopped packages
   command: sudo dpkg --configure -a
   changed_when: false
   failed_when: false
   async: "{{ timeout_default }}"
   poll: 0
 
-- name: Mise à jour et mise à niveau des paquets
+- name: Update apt
   apt:
     update_cache: yes
     upgrade: dist
@@ -31,5 +31,10 @@
       - python3-pip
       - python3-venv
     state: present
+  async: "{{ timeout_default }}"
+  poll: 0
+
+- name: Configure Git for user {{ git_name }}
+  command: git config --global user.name "{{ git_name }}" && git config --global user.email "{{ git_email }}" && git config --global credential.helper store
   async: "{{ timeout_default }}"
   poll: 0

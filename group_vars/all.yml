@@ -1,12 +1,27 @@
+# Std. conf
 timeout_default: 60
+version: "0.0.1"
+
+# User conf
 user: "{{ ansible_user }}"
 home_dir: "/home/{{ user }}"
 venv_name: "env"
+author_name: "Emeric Defay"
+email: "{{ author_name.lower() | replace(' ', '') }}@gmail.com"
+
+#  Project conf
 project_name: "TEST"
 project_slug: "{{ project_name.lower() | replace(' ', '_') | replace('-', '_') | replace('.', '_') | trim() }}"
 projet_dir: "/home/{{ user }}/DEV"
-author_name: "EDEFAY"
-
 domain_name: "korporation.com"
-email: "{{ author_name.lower() | replace(' ', '-') }}@korporation.com"
-version: "0.0.1"
+
+# Git conf
+git_name: ""
+git_email: ""
+git_project: 'https://github.com/grantmcconnaughey/cookiecutter-django-vue-graphql-aws.git'
+cookiecutter_original: "django_vuejs_docker_project"
+
+# Spe. conf
+postgres_version: "13"
+python_version: "3.11"
+node_version: "19"
