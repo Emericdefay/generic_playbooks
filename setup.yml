@@ -1,0 +1,7 @@
+---
+- hosts: raspberries
+  become: true
+  roles:
+    - base
+    - docker
+    - django-vuejs

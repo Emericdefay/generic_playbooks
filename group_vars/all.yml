@@ -1,0 +1,12 @@
+timeout_default: 60
+user: "{{ ansible_user }}"
+home_dir: "/home/{{ user }}"
+venv_name: "env"
+project_name: "TEST"
+project_slug: "{{ project_name.lower() | replace(' ', '_') | replace('-', '_') | replace('.', '_') | trim() }}"
+projet_dir: "/home/{{ user }}/DEV"
+author_name: "EDEFAY"
+
+domain_name: "korporation.com"
+email: "{{ author_name.lower() | replace(' ', '-') }}@korporation.com"
+version: "0.0.1"

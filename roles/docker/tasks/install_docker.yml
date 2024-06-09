@@ -1,0 +1,86 @@
+---
+- name: Installer les paquets requis
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+  become: true
+
+- name: Créer le répertoire pour les keyrings APT
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Télécharger la clé GPG officielle de Docker
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+  become: true
+
+- name: Changer les permissions de la clé GPG de Docker
+  file:
+    path: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  become: true
+
+- name: Ajouter le dépôt Docker à la liste des sources APT
+  shell: |
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  become: true
+
+- name: Mettre à jour le cache APT après ajout du dépôt Docker
+  apt:
+    update_cache: yes
+  become: true
+
+- name: Installer Docker Engine
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+  become: true
+
+- name: Supprimer le paquet python-configparser
+  apt:
+    name: python-configparser
+    state: absent
+  become: true
+
+- name: Télécharger le script d'installation de Docker
+  shell: curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+  args:
+    creates: /tmp/get-docker.sh
+  become: true
+
+- name: Installer Docker
+  shell: sh /tmp/get-docker.sh
+  args:
+    creates: /usr/bin/docker
+  become: true
+
+- name: Ajouter l'utilisateur au groupe docker
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+  become: true
+
+- name: Vérifier l'installation de Docker
+  command: docker --version
+  register: docker_version
+
+- debug:
+    msg: "Docker version: {{ docker_version.stdout }}"
+
+- name: Vérifier l'installation de Docker Compose
+  command: docker compose --version
+  register: docker_compose_version
+
+- debug:
+    msg: "Docker Compose version: {{ docker_compose_version.stdout }}"
